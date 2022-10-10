@@ -18,11 +18,9 @@ if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
   puppeteer = require("puppeteer");
 }
 
-app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/form2.html');
-});
 
-app.post("/", async (req, res) => {
+
+app.get("/", async (req, res) => {
   let options = {};
 
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {

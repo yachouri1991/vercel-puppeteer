@@ -11,11 +11,12 @@ var Chromium = {};
 var puppeteer;
 
 if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-  Chromium = require("chrome-aws-lambda");
+  chrome = require("chrome-aws-lambda");
   puppeteer = require("puppeteer-core");
   Cluster = require('puppeteer-cluster');
 } else {
   puppeteer = require("puppeteer");
+  Cluster = require('puppeteer-cluster');
 }
 
 app.get('/', function (req, res) {
@@ -25,22 +26,25 @@ app.get('/', function (req, res) {
 app.post('/', function (req, res) {
   const formurls = req.body.urls;
   const urls = formurls.split(/\r?\n|\r|\n/g);
-  const fs = require("fs");
   const { Cluster } = require('puppeteer-cluster');
 
   (async () => {
+    let puppeteerOptions = {};
+
+    if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+      puppeteerOptions = {
+        args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+        defaultViewport: chrome.defaultViewport,
+        executablePath: await chrome.executablePath,
+        headless: true,
+        ignoreHTTPSErrors: true,
+      };
+    }
     const cluster = await Cluster.launch({
 
       concurrency: Cluster.CONCURRENCY_PAGE,
       maxConcurrency: 1,
-      puppeteerOptions: {
-        args: ["--hide-scrollbars", "--disable-web-security"],
-        defaultViewport: Chromium.defaultViewport,
-        executablePath: await Chromium.executablePath,
-        headless: true,
-        ignoreHTTPSErrors: true,
-      },
-    });
+      puppeteerOptions });
 
     cluster.on('taskerror', (err, data) => {
       console.log(`Error crawling ${data}: ${err.message}`);

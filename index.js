@@ -7,8 +7,9 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(bodyParser.json());
 
-var Chromium = {};
-var puppeteer;
+let chrome = {};
+let puppeteer;
+let Cluster;
 
 if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
   chrome = require("chrome-aws-lambda");
@@ -26,7 +27,7 @@ app.get('/', function (req, res) {
 app.post('/', function (req, res) {
   const formurls = req.body.urls;
   const urls = formurls.split(/\r?\n|\r|\n/g);
-  const { Cluster } = require('puppeteer-cluster');
+  //const { Cluster } = require('puppeteer-cluster');
 
   (async () => {
     let puppeteerOptions = {};

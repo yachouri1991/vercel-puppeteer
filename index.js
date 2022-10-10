@@ -7,6 +7,16 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(bodyParser.json());
 
+var Chromium = {};
+var puppeteer;
+
+if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+  Chromium = require("chrome-aws-lambda");
+  puppeteer = require("puppeteer-core");
+  Cluster = require('puppeteer-cluster');
+} else {
+  puppeteer = require("puppeteer");
+}
 
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/form2.html');
@@ -15,7 +25,6 @@ app.get('/', function (req, res) {
 app.post('/', function (req, res) {
   const formurls = req.body.urls;
   const urls = formurls.split(/\r?\n|\r|\n/g);
-  const Chromium = require("chrome-aws-lambda");
   const fs = require("fs");
   const { Cluster } = require('puppeteer-cluster');
 
@@ -25,7 +34,9 @@ app.post('/', function (req, res) {
       concurrency: Cluster.CONCURRENCY_PAGE,
       maxConcurrency: 1,
       puppeteerOptions: {
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: ["--hide-scrollbars", "--disable-web-security"],
+        defaultViewport: Chromium.defaultViewport,
+        executablePath: await Chromium.executablePath,
         headless: true,
         ignoreHTTPSErrors: true,
       },
@@ -78,11 +89,8 @@ app.post('/', function (req, res) {
           );
         } catch (error) { }
 
-        if (deliverydate !== "Null") {
-          fs.appendFile(filename, results = `${url}\t${price}\t${deliverydate.replace(",", " ").replace(". Details", "").replace(" if you spend $25 on items shipped by Amazon", "")}\t${soldby.trim()}\t${feedback}\n`, function (err) {
-            if (err) throw err;
-          });
-        }
+        results = `${url}\t${price}\t${deliverydate.replace(",", " ").replace(". Details", "").replace(" if you spend $25 on items shipped by Amazon", "")}\t${soldby.trim()}\t${feedback}\n`
+        
       }
 
 
@@ -95,7 +103,6 @@ app.post('/', function (req, res) {
 
     await cluster.idle();
     await cluster.close();
-
     res.send(results);
 
   })();

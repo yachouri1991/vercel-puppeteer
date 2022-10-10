@@ -16,8 +16,6 @@
     "body-parser": "^1.20.1",
     "chrome-aws-lambda": "^6",
     "express": "^4.18.1",
-    "fs": "^0.0.1-security",
-    "puppeteer-cluster": "^0.23.0",
     "puppeteer-core": "^6",
     "vercel": "^28.4.8"
   },

@@ -9,15 +9,15 @@ app.use(bodyParser.json());
 
 let chrome = {};
 let puppeteer;
-let Cluster;
+//let Cluster;
 
 if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
   chrome = require("chrome-aws-lambda");
   puppeteer = require("puppeteer-core");
-  Cluster = require('puppeteer-cluster');
+  //Cluster = require('puppeteer-cluster');
 } else {
   puppeteer = require("puppeteer");
-  Cluster = require('puppeteer-cluster');
+  //Cluster = require('puppeteer-cluster');
 }
 
 app.get('/', function (req, res) {
@@ -30,10 +30,10 @@ app.post('/', function (req, res) {
   //const { Cluster } = require('puppeteer-cluster');
 
   (async () => {
-    let puppeteerOptions = {};
+    let options = {};
 
     if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-      puppeteerOptions = {
+      options = {
         args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
         defaultViewport: chrome.defaultViewport,
         executablePath: await chrome.executablePath,
@@ -41,25 +41,16 @@ app.post('/', function (req, res) {
         ignoreHTTPSErrors: true,
       };
     }
-    const cluster = await Cluster.launch({
 
-      concurrency: Cluster.CONCURRENCY_PAGE,
-      maxConcurrency: 1,
-      puppeteerOptions });
+    try {
+      let browser = await puppeteer.launch(options);
 
-    cluster.on('taskerror', (err, data) => {
-      console.log(`Error crawling ${data}: ${err.message}`);
-    });
+      let page = await browser.newPage();
+      await page.goto('https://www.amazon.com/dp/' + urls + '/ref=olp-opf-redir?aod=1&ie=UTF8&condition=NEW', { waitUntil: 'load' });
 
-    await cluster.task(async ({ page, data: url }) => {
-
-      await page.goto('https://www.amazon.com/dp/' + url + '/ref=olp-opf-redir?aod=1&ie=UTF8&condition=NEW', { waitUntil: 'load' });
       await page.waitForSelector('div.a-spacing-none.a-padding-base');
-      const productsHandles = await page.$$(
-        "div.a-spacing-none.a-padding-base"
-      );
 
-
+      const productsHandles = await page.$$("div.a-spacing-none.a-padding-base");
 
       for (const producthandle of productsHandles) {
 
@@ -94,23 +85,18 @@ app.post('/', function (req, res) {
           );
         } catch (error) { }
 
-        results = `${url}\t${price}\t${deliverydate.replace(",", " ").replace(". Details", "").replace(" if you spend $25 on items shipped by Amazon", "")}\t${soldby.trim()}\t${feedback}\n`
-        
+        results = `${urls}\t${price}\t${deliverydate.replace(",", " ").replace(". Details", "").replace(" if you spend $25 on items shipped by Amazon", "")}\t${soldby.trim()}\t${feedback}\n`
+
       }
 
 
-    });
-
-    for (const url of urls) {
-      await cluster.queue(url);
-
+      res.send(results);
+    } catch (err) {
+      console.error(err);
+      return null;
     }
 
-    await cluster.idle();
-    await cluster.close();
-    res.send(results);
-
-  })();
+  });
 });
 
 app.listen(process.env.PORT || 3000, () => {

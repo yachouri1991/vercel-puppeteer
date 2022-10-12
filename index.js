@@ -33,7 +33,6 @@ app.get("/", async (req, res) => {
     };
   }
 
-  try {
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
@@ -85,10 +84,6 @@ app.get("/", async (req, res) => {
 
     }
     
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
 });
 
 app.listen(process.env.PORT || 3000, () => {

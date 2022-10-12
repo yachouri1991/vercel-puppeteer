@@ -43,16 +43,9 @@ app.post("/", async (req, res) => {
 
     let page = await browser.newPage();
     await page.goto('https://www.amazon.com/dp/' + urls, { waitUntil: 'load' });
-    let productsHandles = await page.$$("#dp");
-    for (const producthandle of productsHandles) {
       let ProductTitle = "Null";
-      try {
         ProductTitle = await page.evaluate(
-          (el) => el.querySelector("#productTitle").textContent.replace(",", ""),
-          producthandle
-        );
-      } catch (error) { }
-    }
+          (el) => el.querySelector("#productTitle").textContent.replace(",", ""));
     res.send(ProductTitle);
   } catch (err) {
     console.error(err);

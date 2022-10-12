@@ -37,7 +37,7 @@ app.get("/", async (req, res) => {
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
-    await page.goto("https://www.ebay.com");
+    await page.goto("https://amazon.com/dp/B09Q3N85G8");
     res.send(await page.title());
   } catch (err) {
     console.error(err);

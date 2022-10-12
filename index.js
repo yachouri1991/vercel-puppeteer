@@ -39,14 +39,14 @@ app.post("/", async (req, res) => {
   try {
     const formurls = req.body.urls;
     const urls = formurls.split(/\r?\n|\r|\n/g);
+    
     let browser = await puppeteer.launch(options);
-
     let page = await browser.newPage();
+
     await page.goto('https://www.amazon.com/dp/' + urls, { waitUntil: 'load' });
-      let ProductTitle = "Null";
-        ProductTitle = await page.evaluate(
-          (el) => el.querySelector("#productTitle").textContent.replace(",", ""));
-    res.send(ProductTitle);
+    await page.waitForSelector('#productTitle');
+    const textContent = await page.evaluate(() => {return document.querySelector('#productTitle');});
+    res.send(textContent);
   } catch (err) {
     console.error(err);
     return null;

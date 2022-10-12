@@ -42,11 +42,18 @@ app.post("/", async (req, res) => {
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
-    await page.goto('https://www.amazon.com/dp/'+urls , { waitUntil: 'load'});
+    await page.goto('https://www.amazon.com/dp/' + urls, { waitUntil: 'load' });
     let productsHandles = await page.$$("#dp");
-    
-
-    res.send(await page.title());
+    for (const producthandle of productsHandles) {
+      let ProductTitle = "Null";
+      try {
+        ProductTitle = await page.evaluate(
+          (el) => el.querySelector("#productTitle").textContent.replace(",", ""),
+          producthandle
+        );
+      } catch (error) { }
+    }
+    res.send(ProductTitle);
   } catch (err) {
     console.error(err);
     return null;

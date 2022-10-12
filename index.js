@@ -33,57 +33,16 @@ app.get("/", async (req, res) => {
     };
   }
 
+  try {
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
-    await page.goto('https://www.amazon.com/dp/B09Q3N85G8/ref=olp-opf-redir?aod=1&ie=UTF8&condition=NEW' , { waitUntil: 'load'});
-    await page.waitForSelector('div.a-spacing-none.a-padding-base');
-    const productsHandles = await page.$$(
-      "div.a-spacing-none.a-padding-base"
-    );
-
-
-
-    for (const producthandle of productsHandles) {
-
-      let deliverydate = "Null";
-      let soldby = "Null";
-      let feedback = "Null";
-      let price = "Null";
-
-      
-        try {
-          deliverydate = await page.evaluate(
-          (el) => el.querySelector(".a-spacing-top-micro #mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE span[data-csa-c-type]").textContent.replace(" delivery ",",").trim(),
-          producthandle
-          );
-        }   catch (error) {}
-        try {
-          soldby = await page.evaluate(
-          (el) => el.querySelector("#aod-offer-shipsFrom > div > div > div.a-fixed-left-grid-col.a-col-right > span").textContent.trim(),
-          producthandle
-          );
-        }   catch (error) {}
-        try {
-          feedback = await page.evaluate(
-          (el) => el.querySelector("#aod-offer-seller-rating").textContent.replace(" positive over last 12 months","").trim(),
-          producthandle
-          );
-        }   catch (error) {}
-        try {
-          price = await page.evaluate(
-          (el) => el.querySelector("#aod-offer-price > div > div > div.a-fixed-left-grid-col.a-col-left").textContent.trim(),
-          producthandle
-          );
-        }   catch (error) {}
-
-
-        const results = `${url}\t${price}\t${deliverydate.replace(","," ").replace(". Details","").replace(" if you spend $25 on items shipped by Amazon","")}\t${soldby.trim()}\t${feedback}\n`
-        
-        res.send(results);
-
-    }
-    
+    await page.goto("https://www.amazon.com/dp/B09Q3N85G8");
+    res.send(await page.title());
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 });
 
 app.listen(process.env.PORT || 3000, () => {

@@ -49,7 +49,7 @@ app.post("/", async (req, res) => {
     const text = await page.$eval(elementSelector, (uiElement) => {
       return uiElement.textContent;
     });
-    res.send(textContent);
+    res.send(text);
   } catch (err) {
     console.error(err);
     return null;

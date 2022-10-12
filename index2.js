@@ -49,8 +49,6 @@ app.post("/", async (req, res) => {
           return uiElement.textContent;
         });
         
-
-
     res.send(text);
   } catch (err) {
     console.error(err);
